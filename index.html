@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scientific Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fdf2f8;--btn-white:#ffffff;--btn-operator:#fde8ef;--btn-operator-hover:#fbd5e5;--border:#f1d5e0;--display-border:#edc9d8;--teal:#0097a7;--teal-hover:#00838f;--text:#1f1f1f;--text-muted:#6b5a62;--shadow:0 1px 2px rgba(80,30,50,0.08),0 0 0 1px rgba(245,210,225,0.8)}
+body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:20px}
+.calc{width:100%;max-width:360px;background:var(--bg);display:flex;flex-direction:column;gap:0}
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 4px 14px}
+.header-left{display:flex;align-items:center;gap:12px}
+.hamburger{width:36px;height:36px;display:grid;place-items:center;border-radius:6px;cursor:pointer}
+.hamburger:hover{background:rgba(0,0,0,0.05)}
+.header-title{font-size:20px;font-weight:600;letter-spacing:-0.01em}
+.header-right{display:flex;gap:14px;font-size:13px}
+.tab{padding:6px 2px;border-bottom:2px solid transparent;cursor:pointer;color:var(--text-muted);font-weight:500}
+.tab.active{color:var(--text);border-color:var(--text);font-weight:600}
+.display-wrap{border:1px solid var(--display-border);background:rgba(255,255,255,0.7);border-radius:8px;margin:0 2px;overflow:hidden}
+.display-main{font-size:44px;font-weight:600;text-align:right;padding:18px 16px 6px;min-height:72px;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.display-sub{font-size:13px;text-align:right;color:var(--text-muted);padding:0 16px 10px;min-height:18px;opacity:0.8}
+.toggles{display:flex;gap:18px;padding:10px 6px 6px;font-size:12px;font-weight:700;letter-spacing:0.04em}
+.toggle{cursor:pointer;padding:4px 8px;border-radius:4px}
+.toggle.active{background:var(--btn-white);box-shadow:var(--shadow)}
+.memory-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px 2px}
+.mem-btn{font-size:12px;font-weight:600;padding:8px 0;text-align:center;border-radius:4px;cursor:pointer;letter-spacing:0.03em}
+.mem-btn.disabled{opacity:0.35;pointer-events:none}
+.mem-btn:hover{background:rgba(255,255,255,0.8)}
+.dropdown-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:2px}
+.dd{position:relative}
+.dd-btn{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:8px 10px;background:var(--btn-white);border-radius:6px;box-shadow:var(--shadow);cursor:pointer}
+.dd-btn span{font-size:10px}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid var(--border);z-index:20;padding:6px;display:none}
+.dd.open .dd-menu{display:block}
+.dd-item{padding:8px 10px;font-size:13px;border-radius:5px;cursor:pointer}
+.dd-item:hover{background:var(--bg)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:4px 2px 2px}
+.btn{height:48px;border-radius:6px;border:none;font-size:15px;font-weight:500;background:var(--btn-white);box-shadow:var(--shadow);cursor:pointer;display:grid;place-items:center;user-select:none;transition:transform 0.06s,background 0.12s}
+.btn:active{transform:scale(0.97)}
+.btn.op{background:var(--btn-operator)}
+.btn.op:hover{background:var(--btn-operator-hover)}
+.btn.num{background:var(--btn-white);font-weight:500}
+.btn.equals{background:var(--teal);color:white;box-shadow:0 1px 2px rgba(0,151,167,0.3)}
+.btn.equals:hover{background:var(--teal-hover)}
+.btn.second-active{background:#e8d5ff}
+.small{font-size:12px}
+@media(max-width:400px){body{padding:0}.calc{max-width:100%;padding:8px}.display-main{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="header">
+    <div class="header-left"><div class="hamburger">☰</div><div class="header-title">Scientific</div></div>
+    <div class="header-right"><div class="tab active">History</div><div class="tab">Memory</div></div>
+  </div>
+  <div class="display-wrap">
+    <div id="sub" class="display-sub"></div>
+    <div id="display" class="display-main">0</div>
+  </div>
+  <div class="toggles"><div id="deg" class="toggle active">DEG</div><div id="fe" class="toggle">F-E</div></div>
+  <div class="memory-row">
+    <div class="mem-btn disabled" id="mc">MC</div><div class="mem-btn disabled" id="mr">MR</div>
+    <div class="mem-btn" id="mplus">M+</div><div class="mem-btn" id="mminus">M−</div><div class="mem-btn" id="ms">MS</div>
+  </div>
+  <div class="dropdown-row">
+    <div class="dd" id="trig-dd"><div class="dd-btn">Trigonometry <span>▾</span></div>
+      <div class="dd-menu"><div class="dd-item" data-f="sin">sin</div><div class="dd-item" data-f="cos">cos</div><div class="dd-item" data-f="tan">tan</div><div class="dd-item" data-f="asin">sin⁻¹</div><div class="dd-item" data-f="acos">cos⁻¹</div></div>
+    </div>
+    <div class="dd" id="func-dd"><div class="dd-btn">Function <span>▾</span></div>
+      <div class="dd-menu"><div class="dd-item" data-f="floor">⌊x⌋ floor</div><div class="dd-item" data-f="ceil">⌈x⌉ ceil</div><div class="dd-item" data-f="rand">Rand</div><div class="dd-item" data-f="dms">dms</div></div>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+const displayEl=document.getElementById('display');
+const subEl=document.getElementById('sub');
+let display='0', prev=null, op=null, waiting=false, memory=0, second=false, deg=true, fe=false;
+
+function update(){displayEl.textContent=fe?toExp(display):display; subEl.textContent=op&&prev!==null?prev+' '+(op||'') :''; updateMemUI();}
+function toExp(v){let n=parseFloat(v); if(isNaN(n)) return v; if(Math.abs(n)>=1e9||(Math.abs(n)<1e-6&&n!==0)) return n.toExponential(6); return v;}
+function inputDigit(d){if(waiting){display=d;waiting=false;}else{display=display==='0'?d:display+d;}update();}
+function inputDot(){if(waiting){display='0.';waiting=false;}else if(display.indexOf('.')===-1) display+='.';update();}
+function clearAll(){display='0';prev=null;op=null;waiting=false;update();}
+function back(){if(waiting) return; display=display.length>1?display.slice(0,-1):'0';update();}
+function toggleSign(){if(display==='0') return; display=display[0]==='-'?display.slice(1):'-'+display;update();}
+function setOp(next){let val=parseFloat(display); if(prev===null){prev=val;}else if(op){prev=calc(prev,val,op); display=String(prev);} op=next; waiting=true; update();}
+function calc(a,b,o){switch(o){case '+':return a+b;case '-':return a-b;case '×':return a*b;case '÷':return b!==0?a/b:NaN;case 'mod':return a%b;case 'x^y':return Math.pow(a,b);default:return b;}}
+function unary(fn){let x=parseFloat(display); let r=fn(x); if(!isFinite(r)) r='Error'; display=String(r); waiting=true; update();}
+function factorial(n){if(n<0||!Number.isInteger(n)) return NaN; let r=1; for(let i=2;i<=n;i++) r*=i; return r;}
+
+const buttons=[
+ [{l:'2ⁿᵈ',t:'second',a:'op'},{l:'π',t:'pi'},{l:'e',t:'e'},{l:'C',t:'clear',a:'op'},{l:'⌫',t:'back',a:'op'}],
+ [{l:'x²',sl:'x³',t:'square',a:'op'},{l:'¹⁄ₓ',t:'recip',a:'op'},{l:'|x|',t:'abs',a:'op'},{l:'exp',t:'exp',a:'op'},{l:'mod',t:'op',v:'mod',a:'op'}],
+ [{l:'²√x',sl:'³√x',t:'sqrt',a:'op'},{l:'(',t:'('},{l:')',t:')'},{l:'n!',t:'fact',a:'op'},{l:'÷',t:'op',v:'÷',a:'op'}],
+ [{l:'xʸ',sl:'ʸ√x',t:'pow',a:'op'},{l:'7',t:'digit',v:'7'},{l:'8',t:'digit',v:'8'},{l:'9',t:'digit',v:'9'},{l:'×',t:'op',v:'×',a:'op'}],
+ [{l:'10ˣ',sl:'2ˣ',t:'tenpow',a:'op'},{l:'4',t:'digit',v:'4'},{l:'5',t:'digit',v:'5'},{l:'6',t:'digit',v:'6'},{l:'−',t:'op',v:'-',a:'op'}],
+ [{l:'log',sl:'logᵧx',t:'log',a:'op'},{l:'1',t:'digit',v:'1'},{l:'2',t:'digit',v:'2'},{l:'3',t:'digit',v:'3'},{l:'+',t:'op',v:'+',a:'op'}],
+ [{l:'ln',sl:'eˣ',t:'ln',a:'op'},{l:'⁺⁄₋',t:'sign'},{l:'0',t:'digit',v:'0'},{l:'.',t:'dot'},{l:'=',t:'eq',a:'equals'}],
+];
+
+const grid=document.getElementById('grid');
+buttons.flat().forEach(b=>{
+  const el=document.createElement('button');
+  el.className='btn '+(b.a==='op'?'op ':b.a==='equals'?'equals ':'num ');
+  el.innerHTML=b.l;
+  el.dataset.type=b.t; el.dataset.val=b.v||''; el.dataset.label=b.l; el.dataset.slabel=b.sl||'';
+  el.onclick=()=>handle(b,el);
+  grid.appendChild(el);
+});
+
+function handle(b){
+  switch(b.t){
+    case 'digit': inputDigit(b.v); break;
+    case 'dot': inputDot(); break;
+    case 'clear': clearAll(); break;
+    case 'back': back(); break;
+    case 'sign': toggleSign(); break;
+    case 'pi': display=String(Math.PI); waiting=true; update(); break;
+    case 'e': display=String(Math.E); waiting=true; update(); break;
+    case 'op': if(b.v==='÷'||b.v==='×'||b.v==='-'||b.v==='+'||b.v==='mod') setOp(b.v); break;
+    case 'square': unary(x=> second? Math.pow(x,3): x*x); break;
+    case 'recip': unary(x=> 1/x); break;
+    case 'abs': unary(x=> Math.abs(x)); break;
+    case 'exp': unary(x=> Math.exp(x)); break;
+    case 'sqrt': unary(x=> second? Math.cbrt(x): Math.sqrt(x)); break;
+    case 'fact': unary(x=> factorial(Math.trunc(x))); break;
+    case 'pow': setOp('x^y'); break;
+    case 'tenpow': unary(x=> second? Math.pow(2,x): Math.pow(10,x)); break;
+    case 'log': unary(x=> second? Math.log(x)/Math.log(2): Math.log10(x)); break;
+    case 'ln': unary(x=> second? Math.exp(x): Math.log(x)); break;
+    case '(': break;
+    case ')': break;
+    case 'eq': if(op){ let cur=parseFloat(display); let res=calc(prev,cur,op); display=String(res); prev=null; op=null; waiting=true; update(); } break;
+    case 'second': second=!second; document.querySelectorAll('.btn').forEach((el,i)=>{ const flat=buttons.flat(); const btn=flat[i]; if(btn.sl){ el.innerHTML= second? btn.sl: btn.l; if(second) el.classList.add('second-active'); else el.classList.remove('second-active'); } }); break;
+  }
+}
+
+document.getElementById('deg').onclick=function(){ deg=!deg; this.textContent=deg?'DEG':'RAD'; this.classList.toggle('active'); };
+document.getElementById('fe').onclick=function(){ fe=!fe; this.classList.toggle('active'); update(); };
+function updateMemUI(){ const has=memory!==0; document.getElementById('mc').classList.toggle('disabled',!has); document.getElementById('mr').classList.toggle('disabled',!has); }
+document.getElementById('mc').onclick=()=>{memory=0;updateMemUI();};
+document.getElementById('mr').onclick=()=>{if(memory!==0){display=String(memory);waiting=true;update();}};
+document.getElementById('mplus').onclick=()=>{memory+=parseFloat(display)||0;updateMemUI();};
+document.getElementById('mminus').onclick=()=>{memory-=parseFloat(display)||0;updateMemUI();};
+document.getElementById('ms').onclick=()=>{memory=parseFloat(display)||0;updateMemUI();};
+
+document.querySelectorAll('.dd').forEach(dd=>{
+  dd.querySelector('.dd-btn').onclick=()=>dd.classList.toggle('open');
+  dd.querySelectorAll('.dd-item').forEach(it=>{it.onclick=()=>{const f=it.dataset.f;let x=parseFloat(display);let r=x; if(f==='sin') r=deg?Math.sin(x*Math.PI/180):Math.sin(x); if(f==='cos') r=deg?Math.cos(x*Math.PI/180):Math.cos(x); if(f==='tan') r=deg?Math.tan(x*Math.PI/180):Math.tan(x); if(f==='asin') r=deg?Math.asin(x)*180/Math.PI:Math.asin(x); if(f==='acos') r=deg?Math.acos(x)*180/Math.PI:Math.acos(x); if(f==='floor') r=Math.floor(x); if(f==='ceil') r=Math.ceil(x); if(f==='rand') r=Math.random(); if(f==='dms') r=x; display=String(r); waiting=true; update(); dd.classList.remove('open');}});
+});
+document.addEventListener('click',e=>{document.querySelectorAll('.dd').forEach(dd=>{if(!dd.contains(e.target)) dd.classList.remove('open');});});
+update();
+</script>
+</body>
+</html>
